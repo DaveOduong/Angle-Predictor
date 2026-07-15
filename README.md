@@ -6,17 +6,17 @@ A fun and interactive browser-based game where players estimate a randomly gener
 
 ## Features
 
-- 🎯 Random angle generation (0°–360°)
-- 📐 Visual angle diagram using SVG
-- ❤️ Five-life (heart) system
-- 🔥 Hot/Cold feedback based on guess accuracy
-- ⬆️⬇️ Directional hints (Too High / Too Low)
-- 📜 Guess history log
-- ✅ Green success message when correct
-- ❌ Red feedback for incorrect guesses
-- ⚠️ Automatic Game Over after all lives are lost
-- 🔄 Single button that changes from **Guess** to **New Game**
-- 📱 Responsive design for desktop and mobile devices
+- Random angle generation (0°–360°)
+- Visual angle diagram using SVG
+- Five-life (heart) system
+- Hot/Cold feedback based on guess accuracy
+- Directional hints (Too High / Too Low)
+- Guess history log
+- Green success message when correct
+- Red feedback for incorrect guesses
+- Automatic Game Over after all lives are lost
+- Single button that changes from **Guess** to **New Game**
+- Responsive design for desktop and mobile devices
 
 ---
 
