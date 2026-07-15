@@ -1,0 +1,306 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Angle Predictor</title>
+    <style>
+        body {
+            margin: 0;
+            font-family: Arial, sans-serif;
+            background: #0f172a;
+            color: #fff;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            padding: 15px;
+            box-sizing: border-box;
+            overflow: hidden; /* Prevents whole-page scrolling completely */
+        }
+        .container {
+            display: flex;
+            flex-direction: row;
+            gap: 20px;
+            background: #1e293b;
+            padding: 20px;
+            border-radius: 16px;
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.3);
+            max-width: 850px;
+            width: 100%;
+            max-height: 95vh;
+            box-sizing: border-box;
+        }
+        .game-side {
+            flex: 1.2;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+        .history-side {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            max-height: 100%;
+        }
+        svg {
+            width: 100%;
+            max-width: 340px;
+            height: auto;
+            aspect-ratio: 1 / 1;
+            background: transparent;
+            display: block;
+            margin: auto;
+        }
+        .center {
+            text-align: center;
+        }
+        h2, h3 {
+            margin-top: 0;
+            margin-bottom: 8px;
+        }
+        .control-group {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin: 10px 0;
+            width: 100%;
+        }
+        input, button {
+            padding: 10px;
+            border-radius: 8px;
+            border: none;
+            font-size: 15px;
+            outline: none;
+        }
+        input {
+            background: #334155;
+            color: #fff;
+            width: 80px;
+            text-align: center;
+        }
+        button {
+            background: #2563eb;
+            color: #fff;
+            cursor: pointer;
+            font-weight: 600;
+            padding-left: 15px;
+            padding-right: 15px;
+        }
+        button:hover {
+            background: #1d4ed8;
+        }
+        #historyLog {
+            background: #111827;
+            padding: 10px;
+            border-radius: 8px;
+            flex: 1;
+            overflow-y: auto;
+            font-family: monospace;
+            border: 1px solid #334155;
+            font-size: 13px;
+            line-height: 1.4;
+            box-sizing: border-box;
+        }
+        .msg {
+            padding: 10px;
+            border-radius: 8px;
+            font-weight: bold;
+            margin: 5px 0 0 0;
+            text-align: center;
+            width: 100%;
+            box-sizing: border-box;
+            font-size: 14px;
+        }
+        .ok {
+            background: #065f46;
+            color: #a7f3d0;
+            border: 1px solid #059669;
+        }
+        .bad {
+            background: #7f1d1d;
+            color: #fca5a5;
+            border: 1px solid #b91c1c;
+        }
+        .warn {
+            background: #78350f;
+            color: #fde047;
+            border: 1px solid #d97706;
+        }
+        .pointer-line {
+            transform-origin: 0px 0px;
+        }
+
+        /* Screen space optimization framework logic for mobile devices */
+        @media (max-width: 650px) {
+            body {
+                overflow-y: auto; /* Allow layout stack fallback on super tiny screens if needed */
+            }
+            .container {
+                flex-direction: column;
+                max-height: none;
+                gap: 15px;
+                padding: 15px;
+            }
+            svg {
+                max-width: 240px;
+            }
+            #historyLog {
+                height: 110px;
+                flex: none;
+            }
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    
+    <div class="game-side">
+        <h2 class="center">🎯 Angle Predictor</h2>
+        
+        <svg viewBox="-210 -210 420 420">
+            <defs>
+                <marker id="arrow-base" viewBox="0 0 10 10" refX="6" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+                    <path d="M 0 1.5 L 8 5 L 0 8.5 z" fill="#10b981"/>
+                </marker>
+                <marker id="arrow-target" viewBox="0 0 10 10" refX="6" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+                    <path d="M 0 1.5 L 8 5 L 0 8.5 z" fill="#3b82f6"/>
+                </marker>
+            </defs>
+
+            <path id="targetArc" d="" fill="none" stroke="#3b82f6" stroke-width="4" />
+            <line x1="0" y1="0" x2="170" y2="0" stroke="#10b981" stroke-width="5" marker-end="url(#arrow-base)"/>
+            <line id="targetLine" class="pointer-line" x1="0" y1="0" x2="170" y2="0" stroke="#3b82f6" stroke-width="5" marker-end="url(#arrow-target)"/>
+            <circle cx="0" cy="0" r="8" fill="#fff"/>
+        </svg>
+        
+        <p class="center" style="color: #94a3b8; margin: 8px 0 0 0; font-size: 14px;">Guess the visible angle shown above (0–360°)</p>
+        <div class="control-group">
+            <input id="guess" type="number" min="0" max="360" placeholder="0°">
+            <button id="actionBtn" onclick="action()">Guess</button>
+        </div>
+        
+        <p class="center" style="margin: 2px 0 6px 0; font-size: 15px;"><b>Lives:</b> <span id="hearts"></span></p>
+        <div id="status"></div>
+    </div>
+
+    <div class="history-side">
+        <h3 style="color: #94a3b8;">History Log</h3>
+        <div id="historyLog"></div>
+    </div>
+
+</div>
+
+<script>
+    const guessInput = document.getElementById('guess');
+    const actionBtn = document.getElementById('actionBtn');
+    const heartsContainer = document.getElementById('hearts');
+    const statusContainer = document.getElementById('status');
+    const historyLogContainer = document.getElementById('historyLog');
+    
+    const targetLineElement = document.getElementById('targetLine');
+    const targetArcElement = document.getElementById('targetArc');
+
+    let target, attempts, gameOver = false;
+    const MAX_LIVES = 5;
+
+    function getArcPath(angle, r = 65) {
+        if (angle <= 0) return "";
+        let adjustedAngle = angle >= 360 ? 359.99 : angle;
+        const rad = -adjustedAngle * Math.PI / 180;
+        const x = r * Math.cos(rad);
+        const y = r * Math.sin(rad);
+        const largeArc = adjustedAngle > 180 ? 1 : 0;
+        return `M ${r} 0 A ${r} ${r} 0 ${largeArc} 0 ${x} ${y}`;
+    }
+
+    function rotateLine(lineElement, angle) {
+        lineElement.style.transform = `rotate(${-angle}deg)`;
+    }
+
+    function getDirectionalDiff(g, t) {
+        let diff = g - t;
+        while (diff > 180) diff -= 360;
+        while (diff <= -180) diff += 360;
+        return diff; 
+    }
+
+    function fb(diff) {
+        let absDiff = Math.abs(diff);
+        if (absDiff === 0) return "🎯 PERFECT MATCH!";
+        
+        let direction = diff > 0 ? "(Too High! Target is lower)" : "(Too Low! Target is higher)";
+        
+        if (absDiff <= 5) return `🔥 VERY HOT ${direction}`;
+        if (absDiff > 60) return "🧊 FREEZING (Way off!)";
+        
+        if (diff > 0) {
+            return "🌞 HOT (Too High! Target is lower)";
+        } else {
+            return "🥶 COLD (Too Low! Target is higher)";
+        }
+    }
+
+    function updateLives() {
+        heartsContainer.textContent = "❤️".repeat(MAX_LIVES - attempts) + "🖤".repeat(attempts);
+    }
+
+    function action() {
+        if (gameOver) {
+            newGame();
+        } else {
+            play();
+        }
+    }
+
+    function play() {
+        let g = +guessInput.value;
+        if (guessInput.value === "" || isNaN(g) || g < 0 || g > 360) {
+            alert("Enter 0-360");
+            return;
+        }
+        attempts++;
+        updateLives();
+        
+        let diff = getDirectionalDiff(g, target);
+        let feedbackString = fb(diff);
+        
+        historyLogContainer.innerHTML += `Guess ${attempts}: ${g}° → ${feedbackString}<br>`;
+        historyLogContainer.scrollTop = historyLogContainer.scrollHeight;
+
+        if (Math.abs(diff) === 0) {
+            statusContainer.innerHTML = `<div class='msg ok'>✅ Correct! The angle is exactly ${target}°.</div>`;
+            gameOver = true;
+            actionBtn.textContent = "New Game";
+            return;
+        }
+        
+        statusContainer.innerHTML = `<div class='msg bad'>❌ ${feedbackString}</div>`;
+        
+        if (attempts >= MAX_LIVES) {
+            statusContainer.innerHTML = `<div class='msg warn'>⚠️ Game Over! The correct angle was ${target}°</div>`;
+            gameOver = true;
+            actionBtn.textContent = "New Game";
+        }
+    }
+
+    function newGame() {
+        target = Math.floor(Math.random() * 361);
+        attempts = 0;
+        gameOver = false;
+        historyLogContainer.innerHTML = "";
+        statusContainer.innerHTML = "";
+        guessInput.value = "";
+        actionBtn.textContent = "Guess";
+        
+        rotateLine(targetLineElement, target);
+        targetArcElement.setAttribute('d', getArcPath(target, 65));
+        
+        updateLives();
+    }
+
+    newGame();
+</script>
+</body>
+</html>
